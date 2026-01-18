@@ -1,0 +1,34 @@
+"use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
+Object.defineProperty(exports, "__esModule", { value: true });
+const dotenv_1 = __importDefault(require("dotenv"));
+const db_1 = require("./config/db");
+const Source_1 = require("./models/Source");
+dotenv_1.default.config();
+async function main() {
+    const MONGODB_URI = process.env.MONGODB_URI || '';
+    await (0, db_1.connectDB)(MONGODB_URI).catch((e) => {
+        // proceed even if DB connect logs a warning; connectDB may have thrown
+        // but the function using in-memory server will have thrown earlier.
+        // We'll still attempt to create and let mongoose report any errors.
+        // eslint-disable-next-line no-console
+        console.warn('seedSource: connectDB error:', e?.message || e);
+    });
+    const url = process.env.SAMPLE_SOURCE_URL || 'https://example.com';
+    const name = process.env.SAMPLE_SOURCE_NAME || 'Example Careers';
+    try {
+        const s = await Source_1.Source.create({ name, url, selector: 'a', enabled: true });
+        // eslint-disable-next-line no-console
+        console.log('Created Source:', s);
+    }
+    catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('Failed to create Source:', err?.message || err);
+        process.exit(2);
+    }
+    process.exit(0);
+}
+if (require.main === module)
+    main();
